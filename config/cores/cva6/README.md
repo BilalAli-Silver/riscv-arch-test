@@ -1,8 +1,9 @@
-## DUT Configuration for the CV32A65X
+## DUT Configuration for OpenHW CVA6 (cv32a65x, cv32a60x)
 
 | Config     | ISA                               | Notes                                          |
 | ---------- | --------------------------------- | ---------------------------------------------- |
 | `cv32a65x` | RV32IMC_Zicsr_Zcb_Zba_Zbb_Zbc_Zbs | Formal release version of the CVA6 32-bit core |
+| `cv32a60x` | RV32IMC_Zicsr_Zcb_Zba_Zbb_Zbc_Zbs | Single-issue CVA6 32-bit core (no PMP in RTL)  |
 
 See the [CV32A65X Design Document](https://docs.openhwfoundation.org/projects/cva6-user-manual/04_cv32a65x/design/design.html).
 
@@ -22,6 +23,24 @@ See the [CV32A65X Design Document](https://docs.openhwfoundation.org/projects/cv
 | Halt | `tohost` pass/fail (1/3) | `RVMODEL_HALT_*` + runner `+tohost_addr=` |
 
 Same flow as CVE2 (`install-cve2.sh` → `export PATH` → `export *_ROOT` → `make <config>`).
+
+### ACT config vs CVA6 RTL (`cv32a60x_config_pkg.sv`)
+
+| Item | RTL / TB | ACT config |
+| ---- | -------- | ---------- |
+| ISA | `RV32IMCZicsr_Zcb_Zba_Zbb_Zbc_Zbs` | `cv32a60x.yaml` implemented extensions |
+| Privilege | M-only (`RVS=0`, `RVU=0`) | no S/U in yaml or sail |
+| Issue | single-issue (`SuperscalarEn=0`) | no ACT field; irrelevant to ISA tests |
+| `mtvec` | direct-only (`DirectVecOnly=1`); RTL clears `mtvec[1:0]` (4-byte); ACT yaml uses 256 for UDB/Sail sig compatibility | `MTVEC_BASE_ALIGNMENT_DIRECT: 256`, sail `base_alignment: 8` |
+| `mtval` | hardwired 0 (`TvalEn=0`) | all `REPORT_*_IN_MTVAL_*: false`, `MTVAL_WIDTH: 0` |
+| MSIP / M-mode software IRQ | `SoftwareInterruptEn=0`, CLINT MSIP N/A | sail `machine.software: false`; **Sm tests excluded** (see `ci.yaml`) |
+| MEXT / UART IRQ | PLIC present; Verilator TB `InclUART=0` (no UART→PLIC wire-up) | `RVMODEL_SET_MEXT_INT` macros present; MEXT covered when Sm enabled |
+| Timer (MTIP) | CLINT `0x02000000` | `RVMODEL_MTIME/MTIMECMP` in `rvmodel_macros.h` |
+| PMP | **no PMP** (`NrPMPEntries=0`) | UDB yaml `NUM_PMP_ENTRIES: 0`; PMPSm excluded in `ci.yaml` |
+| HPM / counters | `RVZicntr=0`, `RVZihpm=0`, `PerfCounterEn=0` | no Zicntr/Zihpm; all HPM counters disabled |
+| Halt | `tohost` pass/fail (1/3) | `RVMODEL_HALT_*` + runner `+tohost_addr=` |
+
+Install and run flow matches cv32a65x; use `run-cv32a60x.sh` and `make cv32a60x`.
 
 ### One-time setup
 
@@ -45,6 +64,7 @@ This creates a staging layout (same pattern as CVE2/CVE4):
 ```
 ./cva6/
 ├── bin/run-cv32a65x.sh
+├── bin/run-cv32a60x.sh
 └── cva6/              # CVA6 source tree (tools/, work-ver/, …)
 ```
 
@@ -60,6 +80,7 @@ export CVA6_ROOT="$(pwd)/cva6/cva6"
 
 ```bash
 make cv32a65x JOBS=1 EXCLUDE_EXTENSIONS=Sm
+make cv32a60x JOBS=1 EXCLUDE_EXTENSIONS=Sm
 ```
 
 For serial simulation (avoids Verilator OOM), run the sim phase separately:

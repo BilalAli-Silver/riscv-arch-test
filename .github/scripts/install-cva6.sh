@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# Install CVA6 Verilator testharness for ACT (cv32a65x).
+# Install CVA6 Verilator testharness for ACT (cv32a65x, cv32a60x).
 # Usage: install-cva6.sh <install-dir>
 #   Typical: install-cva6.sh ./cva6
-# Creates: <install-dir>/bin/run-cv32a65x.sh and <install-dir>/cva6/ (source tree).
+# Creates: <install-dir>/bin/run-cv32a65x.sh, run-cv32a60x.sh and <install-dir>/cva6/ (source tree).
 # Cache key derives from sha256(this file)[:12]; bump CVA6_COMMIT to invalidate.
 #
 # Override fork/commit:
@@ -14,8 +14,8 @@ set -euo pipefail
 
 INSTALL_DIR="${1:?Usage: install-cva6.sh <install-dir>}"
 CVA6_REPO="${CVA6_REPO:-https://github.com/openhwgroup/cva6.git}"
-# Pin: bump when updating the CVA6-side runner or RTL integration.
-CVA6_COMMIT="${CVA6_COMMIT:-01ffe61f}"
+# Pin: cv32a60x_act4 tip (includes run-cv32a60x.sh). Bump when updating CVA6-side runners or RTL.
+CVA6_COMMIT="${CVA6_COMMIT:-5b24d97}"
 CVA6_TREE="${INSTALL_DIR}/cva6"
 
 mkdir -p "${INSTALL_DIR}/bin"
@@ -42,7 +42,7 @@ bash "${CVA6_ROOT}/verif/regress/install-toolchain.sh"
 bash "${CVA6_ROOT}/verif/regress/install-verilator.sh"
 export PATH="${VERILATOR_INSTALL_DIR}/bin:${RISCV}/bin:${PATH}"
 
-# 3. Build Verilator testharness for cv32a65x.
+# 3. Build Verilator testharness for cv32a65x (cv32a60x lazy-builds on first run-cv32a60x.sh).
 make -C "${CVA6_ROOT}" verilate \
   verilator="verilator --no-timing" \
   target=cv32a65x \
@@ -54,6 +54,13 @@ test -x "${CVA6_ROOT}/work-ver/Variane_testharness" || {
   exit 1
 }
 
-# 4. Install ACT ELF runner into <install-dir>/bin/ (requires CVA6_ROOT when invoked).
+# 4. Install ACT ELF runners into <install-dir>/bin/ (requires CVA6_ROOT when invoked).
 install -m 0755 "${CVA6_ROOT}/.github/scripts/run-cv32a65x.sh" \
   "${INSTALL_DIR}/bin/run-cv32a65x.sh"
+
+if [[ ! -f "${CVA6_ROOT}/.github/scripts/run-cv32a60x.sh" ]]; then
+  echo "ERROR: ${CVA6_ROOT}/.github/scripts/run-cv32a60x.sh not found (CVA6_COMMIT=${CVA6_COMMIT})" >&2
+  exit 1
+fi
+install -m 0755 "${CVA6_ROOT}/.github/scripts/run-cv32a60x.sh" \
+  "${INSTALL_DIR}/bin/run-cv32a60x.sh"

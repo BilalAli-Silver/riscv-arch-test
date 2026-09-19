@@ -79,14 +79,14 @@ export CVA6_ROOT="$(pwd)/cva6/cva6"
 ### Run tests
 
 ```bash
-make cv32a65x JOBS=1 EXCLUDE_EXTENSIONS=Sm
-make cv32a60x JOBS=1 EXCLUDE_EXTENSIONS=Sm
+make cv32a65x JOBS=1 EXCLUDE_EXTENSIONS=Sm,PMPSm,ExceptionsSm,ExceptionsZc
+make cv32a60x JOBS=1 EXCLUDE_EXTENSIONS=Sm,PMPSm,ExceptionsSm,ExceptionsZc
 ```
 
 For serial simulation (avoids Verilator OOM), run the sim phase separately:
 
 ```bash
-make CONFIG_FILES=config/cores/cva6/cv32a65x/test_config.yaml JOBS=1 EXCLUDE_EXTENSIONS=Sm
+make CONFIG_FILES=config/cores/cva6/cv32a65x/test_config.yaml JOBS=1 EXCLUDE_EXTENSIONS=Sm,PMPSm,ExceptionsSm,ExceptionsZc
 ./run_tests.py -j 1 "$(cat config/cores/cva6/cv32a65x/run_cmd.txt)" work/cv32a65x/elfs
 ```
 

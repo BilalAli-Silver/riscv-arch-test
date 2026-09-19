@@ -4,6 +4,7 @@
 | ---------- | --------------------------------- | ---------------------------------------------- |
 | `cv32a65x` | RV32IMC_Zicsr_Zcb_Zba_Zbb_Zbc_Zbs | Formal release version of the CVA6 32-bit core |
 | `cv32a60x` | RV32IMC_Zicsr_Zcb_Zba_Zbb_Zbc_Zbs | Single-issue CVA6 32-bit core (no PMP in RTL)  |
+| `cv32a6_imac_sv32` | RV32IMAC_Zicsr_Sv32 + Zkn | FPGA CVA6 32-bit core with MMU and PMP |
 
 See the [CV32A65X Design Document](https://docs.openhwfoundation.org/projects/cva6-user-manual/04_cv32a65x/design/design.html).
 

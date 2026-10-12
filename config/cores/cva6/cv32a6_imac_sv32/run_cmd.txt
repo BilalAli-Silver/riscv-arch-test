@@ -1,0 +1,1 @@
+run-cv32a6_imac_sv32.sh {debug:--trace __TRACEFILE__} --elf
